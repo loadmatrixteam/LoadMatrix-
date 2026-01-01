@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>API Test - Loadmatrix</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>Loadmatrix API Test</h1>
+    
+    <h2>Test Login</h2>
+    <button onclick="testAdminLogin()">Test Admin Login</button>
+    <button onclick="testDriverLogin()">Test Driver Login</button>
+    <button onclick="testCustomerLogin()">Test Customer Login</button>
+    
+    <h2>Test Registration</h2>
+    <button onclick="testCustomerRegistration()">Test Customer Registration</button>
+    <button onclick="testDriverRegistration()">Test Driver Registration</button>
+    
+    <div id="results"></div>
+
+    <script>
+        function addResult(message, isSuccess = true) {
+            const div = document.createElement('div');
+            div.className = `test-result ${isSuccess ? 'success' : 'error'}`;
+            div.textContent = message;
+            document.getElementById('results').appendChild(div);
+        }
+
+        async function testLogin(email, password, role) {
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    addResult(`✅ ${role} login successful! Token received.`, true);
+                    return data;
+                } else {
+                    const error = await response.text();
+                    addResult(`❌ ${role} login failed: ${error}`, false);
+                }
+            } catch (error) {
+                addResult(`❌ ${role} login error: ${error.message}`, false);
+            }
+        }
+
+        async function testRegistration(userData, role) {
+            try {
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(userData)
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    addResult(`✅ ${role} registration successful!`, true);
+                    return data;
+                } else {
+                    const error = await response.text();
+                    addResult(`❌ ${role} registration failed: ${error}`, false);
+                }
+            } catch (error) {
+                addResult(`❌ ${role} registration error: ${error.message}`, false);
+            }
+        }
+
+        function testAdminLogin() {
+            testLogin('shloksathe18@gmail.com', 'shlok@2116', 'Admin');
+        }
+
+        function testDriverLogin() {
+            testLogin('testdriver@test.com', 'password123', 'Driver');
+        }
+
+        function testCustomerLogin() {
+            testLogin('testcustomer@test.com', 'password123', 'Customer');
+        }
+
+        function testCustomerRegistration() {
+            const userData = {
+                name: 'Test Customer New',
+                email: 'testcustomer2@test.com',
+                phone: '+91 9876543213',
+                password: 'password123',
+                role: 'customer',
+                address: '456 New Test Street, Test City, Test State - 400002'
+            };
+            testRegistration(userData, 'Customer');
+        }
+
+        function testDriverRegistration() {
+            const userData = {
+                name: 'Test Driver New',
+                email: 'testdriver2@test.com',
+                phone: '+91 9876543214',
+                password: 'password123',
+                role: 'driver',
+                license_number: 'DL123456790',
+                vehicle_type: 'Car',
+                vehicle_number: 'MH12EF9012'
+            };
+            testRegistration(userData, 'Driver');
+        }
+
+        // Test API connection on page load
+        window.onload = function() {
+            addResult('🔄 Testing API connection...', true);
+            fetch('/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({})
+            }).then(response => {
+                if (response.status === 400) {
+                    addResult('✅ API connection working (got expected 400 error for empty request)', true);
+                } else {
+                    addResult('✅ API connection working', true);
+                }
+            }).catch(error => {
+                addResult('❌ API connection failed: ' + error.message, false);
+            });
+        };
+    </script>
+</body>
+</html>
